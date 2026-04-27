@@ -7,7 +7,6 @@ export const HORIZON_COLORS: Record<string, string> = {
   'En service': '#0F766E',
   Transition: '#F59E0B',
   Futur: '#2563EB',
-  'À vérifier': '#64748B',
 };
 
 export const LEVEL_COLORS: Record<string, string> = {

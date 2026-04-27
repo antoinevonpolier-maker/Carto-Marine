@@ -21,7 +21,6 @@ interface OpportunityGroup {
   future: number;
   transition: number;
   enService: number;
-  aVerifier: number;
   score: number;
   items: InventoryItem[];
   horizons: Record<string, number>;
@@ -29,7 +28,7 @@ interface OpportunityGroup {
   functions: Record<string, number>;
 }
 
-const horizonOptions = ['Tous', 'En service', 'Transition', 'Futur', 'À vérifier'] as const;
+const horizonOptions = ['Tous', 'En service', 'Transition', 'Futur'] as const;
 type HorizonOption = (typeof horizonOptions)[number];
 
 function classifyOpportunity(name: string): string {
@@ -66,15 +65,13 @@ function buildOpportunityGroups(items: InventoryItem[]): OpportunityGroup[] {
       const future = groupItems.filter((item) => item.horizonProgramme === 'Futur').length;
       const transition = groupItems.filter((item) => item.horizonProgramme === 'Transition').length;
       const enService = groupItems.filter((item) => item.horizonProgramme === 'En service').length;
-      const aVerifier = groupItems.filter((item) => item.horizonProgramme === 'À vérifier').length;
       return {
         name,
         total: groupItems.length,
         future,
         transition,
         enService,
-        aVerifier,
-        score: future * 3 + transition * 2 + enService + aVerifier,
+        score: future * 3 + transition * 2 + enService,
         items: groupItems,
         horizons: countBy(groupItems, (item) => item.horizonProgramme),
         segments: countBy(groupItems, (item) => item.segmentCartographie),
@@ -90,7 +87,6 @@ function HorizonBar({ group }: { group: OpportunityGroup }) {
     { label: 'Service', value: group.enService, className: 'bg-emerald-500' },
     { label: 'Transition', value: group.transition, className: 'bg-amber-500' },
     { label: 'Futur', value: group.future, className: 'bg-blue-500' },
-    { label: 'À vérifier', value: group.aVerifier, className: 'bg-slate-400' },
   ];
   return (
     <div>
