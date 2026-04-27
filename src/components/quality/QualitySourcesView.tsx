@@ -121,8 +121,8 @@ function ExclusionsTable({ data }: QualitySourcesViewProps) {
             <AlertTriangle className="mt-1 h-5 w-5 text-amber-600 dark:text-amber-300" />
             <div>
               <Badge className="bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-800">Exclu de la visualisation principale</Badge>
-              <h3 className="mt-2 font-bold text-slate-950 dark:text-white">{exclusion.nom || exclusion.code || exclusion.ligneSource}</h3>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{exclusion.ligneSource} · {exclusion.code || 'code non renseigné'}</p>
+              <h3 className="mt-2 font-bold text-slate-950 dark:text-white">{exclusion.nom || exclusion.code || 'Élément exclu'}</h3>
+              {exclusion.code && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{exclusion.code}</p>}
               <p className="mt-3 text-sm font-medium text-slate-700 dark:text-slate-200">Raison : {exclusion.raison}</p>
               {exclusion.commentaire && <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{exclusion.commentaire}</p>}
             </div>

@@ -36,7 +36,6 @@ const details: Array<{ label: string; value: (item: InventoryItem) => string | n
   { label: 'Lancement renouvellement', value: (item) => item.lancementRenouvellement },
   { label: 'Fiabilité source', value: (item) => item.fiabiliteSource },
   { label: 'Observations', value: (item) => item.observations },
-  { label: 'Origine / ligne source', value: (item) => item.origineLigneSource },
 ];
 
 function NodeSummary({ node }: { node: GraphNode }) {
