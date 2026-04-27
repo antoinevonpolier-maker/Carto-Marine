@@ -47,14 +47,21 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const cyRef = useRef<Core | null>(null);
   const [layoutName, setLayoutName] = useState<'breadthfirst' | 'cose' | 'concentric'>('breadthfirst');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+
   const setSelectedNode = useAppStore((state) => state.setSelectedNode);
   const selectedNode = useAppStore((state) => state.selectedNode);
   const toggleExpandedNode = useAppStore((state) => state.toggleExpandedNode);
-  const graphNodesById = useMemo(() => new Map(graph.nodes.map((node) => [node.id, node])), [graph.nodes]);
+
+  const graphNodesById = useMemo(
+    () => new Map(graph.nodes.map((node) => [node.id, node])),
+    [graph.nodes],
+  );
+
   const elements = useMemo(() => toElements(graph), [graph]);
 
   useEffect(() => {
     if (!containerRef.current) return;
+
     const cy = cytoscape({
       container: containerRef.current,
       elements,
@@ -79,7 +86,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
             'text-outline-color': '#ffffff',
             'text-background-color': '#ffffff',
             'text-background-opacity': 0.82,
-            'text-background-padding': 3,
+            'text-background-padding': '3px',
             'text-background-shape': 'roundrectangle',
             'border-width': 3,
             'border-color': '#ffffff',
@@ -142,6 +149,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     });
 
     cyRef.current = cy;
+
     return () => {
       cy.destroy();
       cyRef.current = null;
@@ -151,6 +159,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
+
     cy.elements().remove();
     cy.add(elements);
     runLayout();
@@ -158,56 +167,112 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     cy.off('tap');
     cy.off('mouseover');
     cy.off('mouseout');
+
     cy.on('tap', 'node', (event) => {
       const node = graphNodesById.get(event.target.id());
       if (!node) return;
+
       setSelectedNode(node);
-      if (node.hasChildren) toggleExpandedNode(node.id);
+
+      if (node.hasChildren) {
+        toggleExpandedNode(node.id);
+      }
+
       focusNode(event.target.id(), node.hasChildren ? 150 : 120);
     });
 
     cy.on('mouseover', 'node', (event) => {
       const node = graphNodesById.get(event.target.id());
       if (!node) return;
+
       const originalEvent = event.originalEvent as MouseEvent;
-      setTooltip({ x: originalEvent.clientX + 12, y: originalEvent.clientY + 12, node });
+
+      setTooltip({
+        x: originalEvent.clientX + 12,
+        y: originalEvent.clientY + 12,
+        node,
+      });
     });
 
-    cy.on('mouseout', 'node', () => setTooltip(null));
+    cy.on('mouseout', 'node', () => {
+      setTooltip(null);
+    });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elements, graphNodesById, setSelectedNode, toggleExpandedNode, layoutName]);
 
   useEffect(() => {
     if (!selectedNode) return;
-    const timer = window.setTimeout(() => focusNode(selectedNode.id, 130), 420);
-    return () => window.clearTimeout(timer);
+
+    const timer = window.setTimeout(() => {
+      focusNode(selectedNode.id, 130);
+    }, 420);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [graph.nodes.length, selectedNode]);
 
   function runLayout() {
     const cy = cyRef.current;
     if (!cy) return;
-    const common = { animate: true, animationDuration: 350, padding: 70 };
+
+    const common = {
+      animate: true,
+      animationDuration: 350,
+      padding: 70,
+    };
+
     const layoutOptions =
       layoutName === 'breadthfirst'
-        ? { name: 'breadthfirst', directed: true, spacingFactor: 1.35, circle: false, ...common }
+        ? {
+            name: 'breadthfirst',
+            directed: true,
+            spacingFactor: 1.35,
+            circle: false,
+            ...common,
+          }
         : layoutName === 'concentric'
-          ? { name: 'concentric', concentric: (node: NodeSingular) => 10 - Number(node.data('depth')), levelWidth: () => 1, minNodeSpacing: 28, ...common }
-          : { name: 'cose', nodeRepulsion: 8200, idealEdgeLength: 105, gravity: 0.16, ...common };
+          ? {
+              name: 'concentric',
+              concentric: (node: NodeSingular) => 10 - Number(node.data('depth')),
+              levelWidth: () => 1,
+              minNodeSpacing: 28,
+              ...common,
+            }
+          : {
+              name: 'cose',
+              nodeRepulsion: 8200,
+              idealEdgeLength: 105,
+              gravity: 0.16,
+              ...common,
+            };
+
     cy.layout(layoutOptions as cytoscape.LayoutOptions).run();
   }
 
   function focusNode(nodeId: string, padding = 120) {
     const cy = cyRef.current;
     if (!cy) return;
+
     const node = cy.$id(nodeId);
     if (!node || node.empty()) return;
+
     const neighborhood = node.closedNeighborhood();
+
     cy.animate(
       {
-        fit: { eles: neighborhood, padding },
+        fit: {
+          eles: neighborhood,
+          padding,
+        },
       },
-      { duration: 450, easing: 'ease-in-out-cubic' },
+      {
+        duration: 450,
+        easing: 'ease-in-out-cubic',
+      },
     );
+
     node.select();
   }
 
@@ -218,12 +283,21 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   function exportPng() {
     const cy = cyRef.current;
     if (!cy) return;
-    const png = cy.png({ output: 'blob', bg: 'white', full: true, scale: 2 } as any) as unknown as Blob;
+
+    const png = cy.png({
+      output: 'blob',
+      bg: 'white',
+      full: true,
+      scale: 2,
+    } as any) as unknown as Blob;
+
     const url = URL.createObjectURL(png);
     const link = document.createElement('a');
+
     link.href = url;
     link.download = 'cartographie-marche-naval.png';
     link.click();
+
     URL.revokeObjectURL(url);
   }
 
@@ -239,22 +313,53 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
           <option value="concentric">Pieuvre concentrique</option>
           <option value="cose">Réseau force</option>
         </select>
-        <Button onClick={runLayout} variant="secondary"><RefreshCw className="h-4 w-4" /> Relancer</Button>
-        <Button onClick={fitGraph} variant="secondary"><Maximize2 className="h-4 w-4" /> Ajuster</Button>
-        <Button onClick={exportPng} variant="secondary"><Download className="h-4 w-4" /> PNG</Button>
+
+        <Button onClick={runLayout} variant="secondary">
+          <RefreshCw className="h-4 w-4" />
+          Relancer
+        </Button>
+
+        <Button onClick={fitGraph} variant="secondary">
+          <Maximize2 className="h-4 w-4" />
+          Ajuster
+        </Button>
+
+        <Button onClick={exportPng} variant="secondary">
+          <Download className="h-4 w-4" />
+          PNG
+        </Button>
       </div>
-      <div ref={containerRef} className="h-[72vh] min-h-[560px] w-full bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.08),_transparent_30%),linear-gradient(180deg,_#f8fafc,_#eef2ff)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(96,165,250,0.22),_transparent_30%),linear-gradient(180deg,_#0f172a,_#020617)]" />
+
+      <div
+        ref={containerRef}
+        className="h-[72vh] min-h-[560px] w-full bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.08),_transparent_30%),linear-gradient(180deg,_#f8fafc,_#eef2ff)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(96,165,250,0.22),_transparent_30%),linear-gradient(180deg,_#0f172a,_#020617)]"
+      />
+
       <div className="absolute bottom-4 left-4 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs font-medium text-slate-600 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-300">
         {graph.nodes.length} nœuds visibles · {graph.edges.length} liens · clic = détail + zoom automatique + expansion/réduction
       </div>
+
       {tooltip && (
         <div
           className="pointer-events-none fixed z-50 max-w-xs rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-soft dark:border-slate-700 dark:bg-slate-900"
-          style={{ left: tooltip.x, top: tooltip.y }}
+          style={{
+            left: tooltip.x,
+            top: tooltip.y,
+          }}
         >
-          <p className="font-bold text-slate-950 dark:text-white">{tooltip.node.label}</p>
-          <p className="mt-1 text-slate-600 dark:text-slate-300">{describeNode(tooltip.node)}</p>
-          {tooltip.node.hasChildren && <p className="mt-2 font-semibold text-navy-700 dark:text-blue-300">Cliquez pour ouvrir / fermer et zoomer</p>}
+          <p className="font-bold text-slate-950 dark:text-white">
+            {tooltip.node.label}
+          </p>
+
+          <p className="mt-1 text-slate-600 dark:text-slate-300">
+            {describeNode(tooltip.node)}
+          </p>
+
+          {tooltip.node.hasChildren && (
+            <p className="mt-2 font-semibold text-navy-700 dark:text-blue-300">
+              Cliquez pour ouvrir / fermer et zoomer
+            </p>
+          )}
         </div>
       )}
     </div>
