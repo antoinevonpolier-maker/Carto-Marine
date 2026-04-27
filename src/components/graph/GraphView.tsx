@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Maximize2 } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import type { WorkbookData } from '../../types/data';
@@ -22,6 +22,7 @@ export function GraphView({ data }: GraphViewProps) {
   const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
   const expandAllVisible = useAppStore((state) => state.expandAllVisible);
   const collapseToTop = useAppStore((state) => state.collapseToTop);
+  const triggerGraphFit = useAppStore((state) => state.triggerGraphFit);
 
   const filteredInventory = useMemo(() => filterInventory(data.inventory, filters), [data.inventory, filters]);
   const fullGraph = useMemo(() => buildGraphData(filteredInventory, data.relations), [filteredInventory, data.relations]);
@@ -42,7 +43,10 @@ export function GraphView({ data }: GraphViewProps) {
       <GraphLegend />
       <div className="flex justify-end gap-2">
         <Button onClick={() => expandAllVisible(fullGraph.nodes.map((node) => node.id))}>
-          <ChevronDown className="h-4 w-4" /> Agrandir
+          <ChevronDown className="h-4 w-4" /> Tout ouvrir
+        </Button>
+        <Button onClick={triggerGraphFit}>
+          <Maximize2 className="h-4 w-4" /> Agrandir
         </Button>
         <Button onClick={() => collapseToTop(getDefaultExpandedIds(fullGraph))}>
           <ChevronUp className="h-4 w-4" /> Réduire

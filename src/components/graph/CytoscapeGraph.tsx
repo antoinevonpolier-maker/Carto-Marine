@@ -51,6 +51,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const setSelectedNode = useAppStore((state) => state.setSelectedNode);
   const selectedNode = useAppStore((state) => state.selectedNode);
   const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
+  const graphFitCounter = useAppStore((state) => state.graphFitCounter);
 
   const graphNodesById = useMemo(
     () => new Map(graph.nodes.map((node) => [node.id, node])),
@@ -191,9 +192,11 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
           parentId = graphNodesById.get(parentId)?.parentId;
         }
         setExpandedNodeIds([...newIds]);
+        // Auto-fit après la réorganisation du graphe (layout = 350ms)
+        window.setTimeout(() => cyRef.current?.fit(undefined, 60), 420);
+      } else {
+        focusNode(event.target.id(), 120);
       }
-
-      focusNode(event.target.id(), node.hasChildren ? 150 : 120);
     });
 
     cy.on('mouseover', 'node', (event) => {
@@ -227,6 +230,11 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
       window.clearTimeout(timer);
     };
   }, [graph.nodes.length, selectedNode]);
+
+  useEffect(() => {
+    if (graphFitCounter === 0) return;
+    cyRef.current?.fit(undefined, 60);
+  }, [graphFitCounter]);
 
   function runLayout() {
     const cy = cyRef.current;

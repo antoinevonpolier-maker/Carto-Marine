@@ -29,6 +29,8 @@ interface AppState {
   collapseToTop: (ids: string[]) => void;
   setGraphMaxDepth: (depth: number) => void;
   toggleDarkMode: () => void;
+  graphFitCounter: number;
+  triggerGraphFit: () => void;
 }
 
 const emptyFilters: AppFilters = {
@@ -73,4 +75,6 @@ export const useAppStore = create<AppState>((set) => ({
   collapseToTop: (ids) => set({ expandedNodeIds: new Set(ids) }),
   setGraphMaxDepth: (graphMaxDepth) => set({ graphMaxDepth }),
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+  graphFitCounter: 0,
+  triggerGraphFit: () => set((state) => ({ graphFitCounter: state.graphFitCounter + 1 })),
 }));
