@@ -148,9 +148,9 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     const cy = cytoscape({
       container: containerRef.current,
       elements,
-      minZoom: 0.08,
-      maxZoom: 4,
-      wheelSensitivity: 0.16,
+      minZoom: 0.15,
+      maxZoom: 5,
+      wheelSensitivity: 0.4,
       style: buildStyle(1),
     });
 
