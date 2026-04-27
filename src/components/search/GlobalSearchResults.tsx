@@ -77,7 +77,6 @@ function ExclusionResult({ exclusion, sourceUrl }: { exclusion: ExclusionItem; s
           </div>
           <p className="mt-2 text-sm font-semibold text-amber-900 dark:text-amber-100">Raison : {displayValue(exclusion.raison)}</p>
           <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">{displayValue(exclusion.commentaire)}</p>
-          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">Référence interne : {displayValue(exclusion.ligneSource)}</p>
         </div>
         {isHttpUrl(sourceUrl) && (
           <a href={sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-xl bg-white px-3 py-2 text-sm font-bold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100 dark:bg-slate-900 dark:text-amber-200 dark:ring-amber-800 dark:hover:bg-slate-800">
