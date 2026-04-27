@@ -288,8 +288,11 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     const node = cy.$id(nodeId);
     if (!node || node.empty()) return;
 
+    const children = node.outgoers('node');
+    const eles = children.empty() ? node : node.union(children);
+
     cy.animate(
-      { fit: { eles: node, padding: 160 } },
+      { fit: { eles, padding: 100 } },
       { duration: 420, easing: 'ease-in-out-cubic' },
     );
 
