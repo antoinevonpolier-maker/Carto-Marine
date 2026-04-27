@@ -239,7 +239,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
-    (cy.style() as any)(buildStyle(nodeScale)).update();
+    cy.style(buildStyle(nodeScale) as any);
   }, [nodeScale]);
 
   function runLayout() {
