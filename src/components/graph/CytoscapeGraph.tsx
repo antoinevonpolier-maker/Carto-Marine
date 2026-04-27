@@ -277,7 +277,9 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
               ...common,
             };
 
-    cy.layout(layoutOptions as cytoscape.LayoutOptions).run();
+    const layout = cy.layout(layoutOptions as cytoscape.LayoutOptions);
+    layout.one('layoutstop', () => cy.fit(undefined, 60));
+    layout.run();
   }
 
   function focusNode(nodeId: string, padding = 120) {
