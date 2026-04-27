@@ -129,6 +129,8 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cyRef = useRef<Core | null>(null);
   const nodeToFocusRef = useRef<string | null>(null);
+  const forceLayoutInitializedRef = useRef(false);
+  const lastNodeCountRef = useRef(0);
   const [layoutName, setLayoutName] = useState<'breadthfirst' | 'cose' | 'concentric'>('cose');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
@@ -177,7 +179,25 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
     cy.elements().remove();
     cy.add(elements);
-    runLayout(true);
+    const currentNodeCount = cy.nodes().length;
+    if (layoutName === 'cose') {
+      if (!forceLayoutInitializedRef.current) {
+        runLayout(true);
+        forceLayoutInitializedRef.current = true;
+      } else if (currentNodeCount !== lastNodeCountRef.current) {
+        // In force mode, re-run layout only when graph structure changes (expand/collapse),
+        // not on simple node selection.
+        runLayout(false);
+      } else {
+        const id = nodeToFocusRef.current;
+        if (id) {
+          nodeToFocusRef.current = null;
+          requestAnimationFrame(() => focusNode(id));
+        }
+      }
+    } else {
+      runLayout(true);
+    }
 
     cy.off('tap');
     cy.off('mouseover');
@@ -207,6 +227,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
         focusNode(event.target.id());
       }
     });
+    lastNodeCountRef.current = currentNodeCount;
 
     cy.on('mouseover', 'node', (event) => {
       const node = graphNodesById.get(event.target.id());
@@ -226,7 +247,17 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elements, graphNodesById, setSelectedNode, setExpandedNodeIds, layoutName]);
+  }, [elements, graphNodesById, setSelectedNode, setExpandedNodeIds]);
+
+  useEffect(() => {
+    const cy = cyRef.current;
+    if (!cy) return;
+    if (layoutName === 'cose') {
+      forceLayoutInitializedRef.current = false;
+    }
+    runLayout(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutName]);
 
   useEffect(() => {
     const cy = cyRef.current;
@@ -267,6 +298,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
               nodeRepulsion: 8200,
               idealEdgeLength: 105,
               gravity: 0.16,
+              randomize: false,
               ...common,
             };
 
