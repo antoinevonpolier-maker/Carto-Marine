@@ -16,6 +16,88 @@ interface TooltipState {
   node: GraphNode;
 }
 
+function buildStyle(scale: number): cytoscape.StylesheetStyle[] {
+  const s = (v: number) => Math.round(v * scale);
+  return [
+    {
+      selector: 'node',
+      style: {
+        label: 'data(label)',
+        'background-color': 'data(color)',
+        color: '#020617',
+        'font-size': s(12),
+        'font-weight': 800,
+        'text-valign': 'bottom',
+        'text-halign': 'center',
+        'text-margin-y': s(8),
+        'text-wrap': 'wrap',
+        'text-max-width': `${s(128)}px`,
+        'text-outline-width': 3,
+        'text-outline-color': '#ffffff',
+        'text-background-color': '#ffffff',
+        'text-background-opacity': 0.82,
+        'text-background-padding': '3px',
+        'text-background-shape': 'roundrectangle',
+        'border-width': 3,
+        'border-color': '#ffffff',
+        width: `mapData(count, 1, 80, ${s(30)}, ${s(82)})`,
+        height: `mapData(count, 1, 80, ${s(30)}, ${s(82)})`,
+        'overlay-padding': 8,
+      },
+    },
+    {
+      selector: 'node[level="Centre"]',
+      style: {
+        width: `${s(128)}px`,
+        height: `${s(128)}px`,
+        color: '#020617',
+        'font-size': s(15),
+        'text-max-width': `${s(160)}px`,
+        'text-outline-width': 4,
+      },
+    },
+    {
+      selector: 'node[level="Segment cartographie"]',
+      style: {
+        width: `${s(102)}px`,
+        height: `${s(102)}px`,
+        'font-size': s(14),
+        'text-max-width': `${s(150)}px`,
+      },
+    },
+    {
+      selector: 'node.leaf',
+      style: {
+        shape: 'round-rectangle',
+        width: `${s(38)}px`,
+        height: `${s(26)}px`,
+        'font-size': s(10),
+        'text-max-width': `${s(115)}px`,
+      },
+    },
+    {
+      selector: 'edge',
+      style: {
+        width: 1.5,
+        'line-color': '#64748b',
+        'target-arrow-color': '#64748b',
+        'target-arrow-shape': 'triangle',
+        'curve-style': 'bezier',
+        opacity: 0.65,
+      },
+    },
+    {
+      selector: ':selected',
+      style: {
+        'border-width': 5,
+        'border-color': '#f59e0b',
+        'line-color': '#f59e0b',
+        'target-arrow-color': '#f59e0b',
+      },
+    },
+  ];
+}
+
 function toElements(graph: GraphData): ElementDefinition[] {
   return [
     ...graph.nodes.map((node) => ({
@@ -51,8 +133,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const setSelectedNode = useAppStore((state) => state.setSelectedNode);
   const selectedNode = useAppStore((state) => state.selectedNode);
   const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
-  const zoomInCounter = useAppStore((state) => state.zoomInCounter);
-  const zoomOutCounter = useAppStore((state) => state.zoomOutCounter);
+  const nodeScale = useAppStore((state) => state.nodeScale);
 
   const graphNodesById = useMemo(
     () => new Map(graph.nodes.map((node) => [node.id, node])),
@@ -70,84 +151,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
       minZoom: 0.08,
       maxZoom: 4,
       wheelSensitivity: 0.16,
-      style: [
-        {
-          selector: 'node',
-          style: {
-            label: 'data(label)',
-            'background-color': 'data(color)',
-            color: '#020617',
-            'font-size': 12,
-            'font-weight': 800,
-            'text-valign': 'bottom',
-            'text-halign': 'center',
-            'text-margin-y': 8,
-            'text-wrap': 'wrap',
-            'text-max-width': '128px',
-            'text-outline-width': 3,
-            'text-outline-color': '#ffffff',
-            'text-background-color': '#ffffff',
-            'text-background-opacity': 0.82,
-            'text-background-padding': '3px',
-            'text-background-shape': 'roundrectangle',
-            'border-width': 3,
-            'border-color': '#ffffff',
-            width: 'mapData(count, 1, 80, 30, 82)',
-            height: 'mapData(count, 1, 80, 30, 82)',
-            'overlay-padding': 8,
-          },
-        },
-        {
-          selector: 'node[level="Centre"]',
-          style: {
-            width: '128px',
-            height: '128px',
-            color: '#020617',
-            'font-size': 15,
-            'text-max-width': '160px',
-            'text-outline-width': 4,
-          },
-        },
-        {
-          selector: 'node[level="Segment cartographie"]',
-          style: {
-            width: '102px',
-            height: '102px',
-            'font-size': 14,
-            'text-max-width': '150px',
-          },
-        },
-        {
-          selector: 'node.leaf',
-          style: {
-            shape: 'round-rectangle',
-            width: '38px',
-            height: '26px',
-            'font-size': 10,
-            'text-max-width': '115px',
-          },
-        },
-        {
-          selector: 'edge',
-          style: {
-            width: 1.5,
-            'line-color': '#64748b',
-            'target-arrow-color': '#64748b',
-            'target-arrow-shape': 'triangle',
-            'curve-style': 'bezier',
-            opacity: 0.65,
-          },
-        },
-        {
-          selector: ':selected',
-          style: {
-            'border-width': 5,
-            'border-color': '#f59e0b',
-            'line-color': '#f59e0b',
-            'target-arrow-color': '#f59e0b',
-          },
-        },
-      ],
+      style: buildStyle(1),
     });
 
     cyRef.current = cy;
@@ -233,18 +237,10 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   }, [graph.nodes.length, selectedNode]);
 
   useEffect(() => {
-    if (zoomInCounter === 0) return;
     const cy = cyRef.current;
     if (!cy) return;
-    cy.zoom({ level: cy.zoom() * 1.3, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
-  }, [zoomInCounter]);
-
-  useEffect(() => {
-    if (zoomOutCounter === 0) return;
-    const cy = cyRef.current;
-    if (!cy) return;
-    cy.zoom({ level: cy.zoom() * 0.77, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
-  }, [zoomOutCounter]);
+    (cy.style() as any)(buildStyle(nodeScale)).update();
+  }, [nodeScale]);
 
   function runLayout() {
     const cy = cyRef.current;

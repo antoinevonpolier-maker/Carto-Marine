@@ -21,8 +21,8 @@ export function GraphView({ data }: GraphViewProps) {
   const graphMaxDepth = useAppStore((state) => state.graphMaxDepth);
   const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
   const expandAllVisible = useAppStore((state) => state.expandAllVisible);
-  const triggerZoomIn = useAppStore((state) => state.triggerZoomIn);
-  const triggerZoomOut = useAppStore((state) => state.triggerZoomOut);
+  const increaseNodeScale = useAppStore((state) => state.increaseNodeScale);
+  const decreaseNodeScale = useAppStore((state) => state.decreaseNodeScale);
 
   const filteredInventory = useMemo(() => filterInventory(data.inventory, filters), [data.inventory, filters]);
   const fullGraph = useMemo(() => buildGraphData(filteredInventory, data.relations), [filteredInventory, data.relations]);
@@ -45,10 +45,10 @@ export function GraphView({ data }: GraphViewProps) {
         <Button onClick={() => expandAllVisible(fullGraph.nodes.map((node) => node.id))}>
           <ChevronDown className="h-4 w-4" /> Tout ouvrir
         </Button>
-        <Button onClick={triggerZoomIn}>
+        <Button onClick={increaseNodeScale}>
           <Maximize2 className="h-4 w-4" /> Agrandir
         </Button>
-        <Button onClick={triggerZoomOut}>
+        <Button onClick={decreaseNodeScale}>
           <Minimize2 className="h-4 w-4" /> Réduire
         </Button>
       </div>

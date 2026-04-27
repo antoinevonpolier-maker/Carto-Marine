@@ -29,10 +29,9 @@ interface AppState {
   collapseToTop: (ids: string[]) => void;
   setGraphMaxDepth: (depth: number) => void;
   toggleDarkMode: () => void;
-  zoomInCounter: number;
-  zoomOutCounter: number;
-  triggerZoomIn: () => void;
-  triggerZoomOut: () => void;
+  nodeScale: number;
+  increaseNodeScale: () => void;
+  decreaseNodeScale: () => void;
 }
 
 const emptyFilters: AppFilters = {
@@ -77,8 +76,7 @@ export const useAppStore = create<AppState>((set) => ({
   collapseToTop: (ids) => set({ expandedNodeIds: new Set(ids) }),
   setGraphMaxDepth: (graphMaxDepth) => set({ graphMaxDepth }),
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
-  zoomInCounter: 0,
-  zoomOutCounter: 0,
-  triggerZoomIn: () => set((state) => ({ zoomInCounter: state.zoomInCounter + 1 })),
-  triggerZoomOut: () => set((state) => ({ zoomOutCounter: state.zoomOutCounter + 1 })),
+  nodeScale: 1,
+  increaseNodeScale: () => set((state) => ({ nodeScale: Math.min(state.nodeScale + 0.25, 3) })),
+  decreaseNodeScale: () => set((state) => ({ nodeScale: Math.max(state.nodeScale - 0.25, 0.25) })),
 }));
