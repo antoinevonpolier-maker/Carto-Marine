@@ -322,15 +322,19 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
           <option value="cose">Réseau force</option>
         </select>
 
-        <Button onClick={() => runLayout(false)} variant="secondary">
-          <RefreshCw className="h-4 w-4" />
-          Relancer
-        </Button>
+        {layoutName === 'cose' && (
+          <>
+            <Button onClick={() => runLayout(false)} variant="secondary">
+              <RefreshCw className="h-4 w-4" />
+              Relancer
+            </Button>
 
-        <Button onClick={fitGraph} variant="secondary">
-          <Maximize2 className="h-4 w-4" />
-          Ajuster
-        </Button>
+            <Button onClick={fitGraph} variant="secondary">
+              <Maximize2 className="h-4 w-4" />
+              Ajuster
+            </Button>
+          </>
+        )}
 
         <Button onClick={exportPng} variant="secondary">
           <Download className="h-4 w-4" />
