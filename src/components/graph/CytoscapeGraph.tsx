@@ -43,6 +43,7 @@ function buildStyle(scale: number): cytoscape.StylesheetStyle[] {
         width: `mapData(count, 1, 80, ${s(30)}, ${s(82)})`,
         height: `mapData(count, 1, 80, ${s(30)}, ${s(82)})`,
         'overlay-padding': 8,
+        'text-events': 'yes',
       },
     },
     {
@@ -239,6 +240,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
       animate: true,
       animationDuration: 350,
       padding: 70,
+      nodeDimensionsIncludeLabels: true,
     };
 
     const layoutOptions =
