@@ -197,10 +197,9 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
           parentId = graphNodesById.get(parentId)?.parentId;
         }
         setExpandedNodeIds([...newIds]);
-        // Auto-fit après la réorganisation du graphe (layout = 350ms)
-        window.setTimeout(() => cyRef.current?.fit(undefined, 60), 420);
+        // le fit() est géré par layoutstop dans runLayout
       } else {
-        focusNode(event.target.id(), 120);
+        focusNode(event.target.id());
       }
     });
 
@@ -223,18 +222,6 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elements, graphNodesById, setSelectedNode, setExpandedNodeIds, layoutName]);
-
-  useEffect(() => {
-    if (!selectedNode) return;
-
-    const timer = window.setTimeout(() => {
-      focusNode(selectedNode.id, 130);
-    }, 420);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [graph.nodes.length, selectedNode]);
 
   useEffect(() => {
     const cy = cyRef.current;
@@ -282,26 +269,16 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     layout.run();
   }
 
-  function focusNode(nodeId: string, padding = 120) {
+  function focusNode(nodeId: string) {
     const cy = cyRef.current;
     if (!cy) return;
 
     const node = cy.$id(nodeId);
     if (!node || node.empty()) return;
 
-    const neighborhood = node.closedNeighborhood();
-
     cy.animate(
-      {
-        fit: {
-          eles: neighborhood,
-          padding,
-        },
-      },
-      {
-        duration: 450,
-        easing: 'ease-in-out-cubic',
-      },
+      { center: { eles: node }, zoom: Math.max(cy.zoom(), 1.2) },
+      { duration: 380, easing: 'ease-in-out-cubic' },
     );
 
     node.select();
