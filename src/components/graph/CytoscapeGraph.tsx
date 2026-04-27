@@ -221,6 +221,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
         focusNode(event.target.id());
       }
     });
+    lastNodeCountRef.current = currentNodeCount;
 
     cy.on('mouseover', 'node', (event) => {
       const node = graphNodesById.get(event.target.id());
@@ -291,6 +292,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
               nodeRepulsion: 8200,
               idealEdgeLength: 105,
               gravity: 0.16,
+              randomize: false,
               ...common,
             };
 
