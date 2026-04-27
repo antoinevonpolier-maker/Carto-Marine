@@ -1,15 +1,15 @@
-import { ChevronDown, ChevronUp } from ‘lucide-react’;
-import { useEffect, useMemo } from ‘react’;
-import { useAppStore } from ‘../../store/useAppStore’;
-import type { WorkbookData } from ‘../../types/data’;
-import { filterInventory } from ‘../../utils/filters’;
-import { buildGraphData, getDefaultExpandedIds, getVisibleGraph } from ‘../../utils/graph’;
-import { FilterPanel } from ‘../filters/FilterPanel’;
-import { Button } from ‘../ui/Button’;
-import { SectionTitle } from ‘../ui/SectionTitle’;
-import { CytoscapeGraph } from ‘./CytoscapeGraph’;
-import { GraphLegend } from ‘./GraphLegend’;
-import { NodeDetailsPanel } from ‘./NodeDetailsPanel’;
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import { useAppStore } from '../../store/useAppStore';
+import type { WorkbookData } from '../../types/data';
+import { filterInventory } from '../../utils/filters';
+import { buildGraphData, getDefaultExpandedIds, getVisibleGraph } from '../../utils/graph';
+import { FilterPanel } from '../filters/FilterPanel';
+import { Button } from '../ui/Button';
+import { SectionTitle } from '../ui/SectionTitle';
+import { CytoscapeGraph } from './CytoscapeGraph';
+import { GraphLegend } from './GraphLegend';
+import { NodeDetailsPanel } from './NodeDetailsPanel';
 
 interface GraphViewProps {
   data: WorkbookData;
@@ -36,7 +36,7 @@ export function GraphView({ data }: GraphViewProps) {
       <SectionTitle
         eyebrow="Pieuvre relationnelle"
         title="Cartographie principale"
-        description="Le graphe suit l’ordre Centre → Segment → Horizon → Fonction → Catégorie → Type → Nom du bâtiment, avec les liens de cohérence métier et les filtres actifs."
+        description="Le graphe suit l'ordre Centre → Segment → Horizon → Fonction → Catégorie → Type → Nom du bâtiment, avec les liens de cohérence métier et les filtres actifs."
       />
       <FilterPanel items={data.inventory} />
       <GraphLegend />
