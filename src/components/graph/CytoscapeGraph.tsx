@@ -127,6 +127,7 @@ function toElements(graph: GraphData): ElementDefinition[] {
 export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cyRef = useRef<Core | null>(null);
+  const nodeToFocusRef = useRef<string | null>(null);
   const [layoutName, setLayoutName] = useState<'breadthfirst' | 'cose' | 'concentric'>('breadthfirst');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
@@ -196,8 +197,8 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
           newIds.add(parentId);
           parentId = graphNodesById.get(parentId)?.parentId;
         }
+        nodeToFocusRef.current = node.id;
         setExpandedNodeIds([...newIds]);
-        // le fit() est géré par layoutstop dans runLayout
       } else {
         focusNode(event.target.id());
       }
@@ -265,7 +266,17 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
             };
 
     const layout = cy.layout(layoutOptions as cytoscape.LayoutOptions);
-    if (fitAfter) layout.one('layoutstop', () => cy.fit(undefined, 60));
+    if (fitAfter) {
+      layout.one('layoutstop', () => {
+        const id = nodeToFocusRef.current;
+        if (id) {
+          nodeToFocusRef.current = null;
+          focusNode(id);
+        } else {
+          cy.fit(undefined, 60);
+        }
+      });
+    }
     layout.run();
   }
 
