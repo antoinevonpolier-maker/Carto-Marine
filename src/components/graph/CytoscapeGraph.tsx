@@ -303,12 +303,15 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     const cy = cyRef.current;
     if (!cy) return;
     cy.fit(undefined, 60);
-    // Calcule le nodeScale optimal : on veut que le texte soit lisible quel que soit le zoom.
-    // Si zoom = 0.4 (beaucoup de noeuds), on grossit les noeuds (scale = 1/zoom).
-    // Si zoom = 1.5 (peu de noeuds), on les rétrécit.
     const zoom = cy.zoom();
-    const optimal = Math.min(Math.max(1 / zoom, 0.3), 2.5);
-    setNodeScale(Math.round(optimal * 4) / 4); // arrondi au 0.25 près
+    // Use a larger base factor to better fill available space
+    const optimal = Math.min(Math.max(1.4 / zoom, 0.5), 2.5);
+    const rounded = Math.round(optimal * 4) / 4;
+    setNodeScale(rounded);
+    // Apply style immediately so the layout engine sees the new node bounding boxes
+    cy.style(buildStyle(rounded) as any);
+    // Re-run layout so nodes are repositioned with proper spacing for their new sizes
+    runLayout(true);
   }
 
   function exportPng() {
