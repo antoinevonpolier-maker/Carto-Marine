@@ -129,7 +129,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cyRef = useRef<Core | null>(null);
   const nodeToFocusRef = useRef<string | null>(null);
-  const [layoutName, setLayoutName] = useState<'breadthfirst' | 'cose' | 'concentric'>('breadthfirst');
+  const [layoutName, setLayoutName] = useState<'breadthfirst' | 'cose' | 'concentric'>('cose');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const setSelectedNode = useAppStore((state) => state.setSelectedNode);
@@ -329,9 +329,9 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
           onChange={(event) => setLayoutName(event.target.value as typeof layoutName)}
           className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
+          <option value="cose">Réseau force</option>
           <option value="breadthfirst">Hiérarchique</option>
           <option value="concentric">Pieuvre concentrique</option>
-          <option value="cose">Réseau force</option>
         </select>
 
         {layoutName === 'cose' && (
