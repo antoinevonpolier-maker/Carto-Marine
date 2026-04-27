@@ -17,7 +17,8 @@ interface TooltipState {
 }
 
 function buildStyle(scale: number): cytoscape.StylesheetStyle[] {
-  const s = (v: number) => Math.round(v * scale);
+  const s = (value: number) => Math.round(value * scale);
+
   return [
     {
       selector: 'node',
@@ -131,11 +132,11 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const nodeToFocusRef = useRef<string | null>(null);
   const forceLayoutInitializedRef = useRef(false);
   const lastNodeCountRef = useRef(0);
+
   const [layoutName, setLayoutName] = useState<'breadthfirst' | 'cose' | 'concentric'>('cose');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const setSelectedNode = useAppStore((state) => state.setSelectedNode);
-  const selectedNode = useAppStore((state) => state.selectedNode);
   const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
   const nodeScale = useAppStore((state) => state.nodeScale);
 
@@ -162,9 +163,11 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
     const observer = new ResizeObserver(() => {
       cy.resize();
-      cy.fit(undefined, 60);
     });
-    if (containerRef.current) observer.observe(containerRef.current);
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
 
     return () => {
       observer.disconnect();
@@ -179,21 +182,15 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
     cy.elements().remove();
     cy.add(elements);
+
     const currentNodeCount = cy.nodes().length;
+
     if (layoutName === 'cose') {
       if (!forceLayoutInitializedRef.current) {
         runLayout(true);
         forceLayoutInitializedRef.current = true;
       } else if (currentNodeCount !== lastNodeCountRef.current) {
-        // In force mode, re-run layout only when graph structure changes (expand/collapse),
-        // not on simple node selection.
         runLayout(false);
-      } else {
-        const id = nodeToFocusRef.current;
-        if (id) {
-          nodeToFocusRef.current = null;
-          requestAnimationFrame(() => focusNode(id));
-        }
       }
     } else {
       runLayout(true);
@@ -209,24 +206,35 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
       setSelectedNode(node);
 
+      if (layoutName === 'cose') {
+        event.target.select();
+        return;
+      }
+
       if (node.hasChildren) {
-        // Always keep default nodes (depth <= 2) open, then expand clicked branch
         const newIds = new Set<string>();
-        for (const [id, n] of graphNodesById) {
-          if (n.depth <= 2) newIds.add(id);
+
+        for (const [id, graphNode] of graphNodesById) {
+          if (graphNode.depth <= 2) {
+            newIds.add(id);
+          }
         }
+
         newIds.add(node.id);
+
         let parentId = node.parentId;
         while (parentId) {
           newIds.add(parentId);
           parentId = graphNodesById.get(parentId)?.parentId;
         }
+
         nodeToFocusRef.current = node.id;
         setExpandedNodeIds([...newIds]);
       } else {
         focusNode(event.target.id());
       }
     });
+
     lastNodeCountRef.current = currentNodeCount;
 
     cy.on('mouseover', 'node', (event) => {
@@ -247,21 +255,25 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elements, graphNodesById, setSelectedNode, setExpandedNodeIds]);
+  }, [elements, graphNodesById, layoutName, setSelectedNode, setExpandedNodeIds]);
 
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
+
     if (layoutName === 'cose') {
       forceLayoutInitializedRef.current = false;
     }
+
     runLayout(true);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layoutName]);
 
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
+
     cy.style(buildStyle(nodeScale) as any);
   }, [nodeScale]);
 
@@ -303,17 +315,21 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
             };
 
     const layout = cy.layout(layoutOptions as cytoscape.LayoutOptions);
+
     if (fitAfter) {
       layout.one('layoutstop', () => {
         const id = nodeToFocusRef.current;
-        if (id) {
+
+        if (id && layoutName !== 'cose') {
           nodeToFocusRef.current = null;
           focusNode(id);
         } else {
+          nodeToFocusRef.current = null;
           cy.fit(undefined, 60);
         }
       });
     }
+
     layout.run();
   }
 
@@ -325,11 +341,19 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     if (!node || node.empty()) return;
 
     const children = node.outgoers('node');
-    const eles = children.empty() ? node : node.union(children);
+    const elementsToFit = children.empty() ? node : node.union(children);
 
     cy.animate(
-      { fit: { eles, padding: 100 } },
-      { duration: 420, easing: 'ease-in-out-cubic' },
+      {
+        fit: {
+          eles: elementsToFit,
+          padding: 100,
+        },
+      },
+      {
+        duration: 420,
+        easing: 'ease-in-out-cubic',
+      },
     );
 
     node.select();
@@ -388,7 +412,10 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
       />
 
       <div className="absolute bottom-4 left-4 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 text-xs font-medium text-slate-600 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-300">
-        {graph.nodes.length} nœuds visibles · {graph.edges.length} liens · clic = détail + zoom automatique + expansion/réduction
+        {graph.nodes.length} nœuds visibles · {graph.edges.length} liens ·{' '}
+        {layoutName === 'cose'
+          ? 'clic = détail, sans déplacement du graphe'
+          : 'clic = détail + zoom automatique + expansion/réduction'}
       </div>
 
       {tooltip && (
@@ -407,7 +434,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
             {describeNode(tooltip.node)}
           </p>
 
-          {tooltip.node.hasChildren && (
+          {tooltip.node.hasChildren && layoutName !== 'cose' && (
             <p className="mt-2 font-semibold text-navy-700 dark:text-blue-300">
               Cliquez pour ouvrir / fermer et zoomer
             </p>
