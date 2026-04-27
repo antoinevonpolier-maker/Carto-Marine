@@ -150,7 +150,14 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
     cyRef.current = cy;
 
+    const observer = new ResizeObserver(() => {
+      cy.resize();
+      cy.fit(undefined, 60);
+    });
+    if (containerRef.current) observer.observe(containerRef.current);
+
     return () => {
+      observer.disconnect();
       cy.destroy();
       cyRef.current = null;
     };

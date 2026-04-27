@@ -42,7 +42,7 @@ export function GraphView({ data }: GraphViewProps) {
       <GraphLegend />
       <div className="flex justify-end gap-2">
         <Button onClick={() => expandAllVisible(fullGraph.nodes.map((node) => node.id))}>
-          <ChevronDown className="h-4 w-4" /> Tout ouvrir
+          <ChevronDown className="h-4 w-4" /> Agrandir
         </Button>
         <Button onClick={() => collapseToTop(getDefaultExpandedIds(fullGraph))}>
           <ChevronUp className="h-4 w-4" /> Réduire
