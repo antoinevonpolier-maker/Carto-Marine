@@ -50,7 +50,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
   const setSelectedNode = useAppStore((state) => state.setSelectedNode);
   const selectedNode = useAppStore((state) => state.selectedNode);
-  const toggleExpandedNode = useAppStore((state) => state.toggleExpandedNode);
+  const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
 
   const graphNodesById = useMemo(
     () => new Map(graph.nodes.map((node) => [node.id, node])),
@@ -175,7 +175,15 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
       setSelectedNode(node);
 
       if (node.hasChildren) {
-        toggleExpandedNode(node.id);
+        // Accordion: expand this node exclusively, close all sibling branches
+        const newIds = new Set<string>();
+        newIds.add(node.id);
+        let parentId = node.parentId;
+        while (parentId) {
+          newIds.add(parentId);
+          parentId = graphNodesById.get(parentId)?.parentId;
+        }
+        setExpandedNodeIds([...newIds]);
       }
 
       focusNode(event.target.id(), node.hasChildren ? 150 : 120);
@@ -199,7 +207,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elements, graphNodesById, setSelectedNode, toggleExpandedNode, layoutName]);
+  }, [elements, graphNodesById, setSelectedNode, setExpandedNodeIds, layoutName]);
 
   useEffect(() => {
     if (!selectedNode) return;
