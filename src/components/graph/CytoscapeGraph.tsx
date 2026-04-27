@@ -17,8 +17,7 @@ interface TooltipState {
 }
 
 function buildStyle(scale: number): cytoscape.StylesheetStyle[] {
-  const s = (value: number) => Math.round(value * scale);
-
+  const s = (v: number) => Math.round(v * scale);
   return [
     {
       selector: 'node',
@@ -131,7 +130,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const cyRef = useRef<Core | null>(null);
   const nodeToFocusRef = useRef<string | null>(null);
   const forceLayoutInitializedRef = useRef(false);
-
+  const lastNodeCountRef = useRef(0);
   const [layoutName, setLayoutName] = useState<'breadthfirst' | 'cose' | 'concentric'>('cose');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
@@ -165,10 +164,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
       cy.resize();
       cy.fit(undefined, 60);
     });
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
+    if (containerRef.current) observer.observe(containerRef.current);
 
     return () => {
       observer.disconnect();
@@ -183,11 +179,15 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
     cy.elements().remove();
     cy.add(elements);
-
+    const currentNodeCount = cy.nodes().length;
     if (layoutName === 'cose') {
       if (!forceLayoutInitializedRef.current) {
         runLayout(true);
         forceLayoutInitializedRef.current = true;
+      } else if (currentNodeCount !== lastNodeCountRef.current) {
+        // In force mode, re-run layout only when graph structure changes (expand/collapse),
+        // not on simple node selection.
+        runLayout(false);
       } else {
         const id = nodeToFocusRef.current;
         if (id) {
@@ -210,28 +210,24 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
       setSelectedNode(node);
 
       if (node.hasChildren) {
+        // Always keep default nodes (depth <= 2) open, then expand clicked branch
         const newIds = new Set<string>();
-
-        for (const [id, graphNode] of graphNodesById) {
-          if (graphNode.depth <= 2) {
-            newIds.add(id);
-          }
+        for (const [id, n] of graphNodesById) {
+          if (n.depth <= 2) newIds.add(id);
         }
-
         newIds.add(node.id);
-
         let parentId = node.parentId;
         while (parentId) {
           newIds.add(parentId);
           parentId = graphNodesById.get(parentId)?.parentId;
         }
-
         nodeToFocusRef.current = node.id;
         setExpandedNodeIds([...newIds]);
       } else {
         focusNode(event.target.id());
       }
     });
+    lastNodeCountRef.current = currentNodeCount;
 
     cy.on('mouseover', 'node', (event) => {
       const node = graphNodesById.get(event.target.id());
@@ -256,30 +252,18 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
-
     if (layoutName === 'cose') {
       forceLayoutInitializedRef.current = false;
     }
-
     runLayout(true);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layoutName]);
 
   useEffect(() => {
     const cy = cyRef.current;
     if (!cy) return;
-
     cy.style(buildStyle(nodeScale) as any);
   }, [nodeScale]);
-
-  useEffect(() => {
-    if (!selectedNode) return;
-
-    requestAnimationFrame(() => {
-      focusNode(selectedNode.id);
-    });
-  }, [selectedNode]);
 
   function runLayout(fitAfter = false) {
     const cy = cyRef.current;
@@ -319,11 +303,9 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
             };
 
     const layout = cy.layout(layoutOptions as cytoscape.LayoutOptions);
-
     if (fitAfter) {
       layout.one('layoutstop', () => {
         const id = nodeToFocusRef.current;
-
         if (id) {
           nodeToFocusRef.current = null;
           focusNode(id);
@@ -332,7 +314,6 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
         }
       });
     }
-
     layout.run();
   }
 
@@ -344,19 +325,11 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     if (!node || node.empty()) return;
 
     const children = node.outgoers('node');
-    const elementsToFit = children.empty() ? node : node.union(children);
+    const eles = children.empty() ? node : node.union(children);
 
     cy.animate(
-      {
-        fit: {
-          eles: elementsToFit,
-          padding: 100,
-        },
-      },
-      {
-        duration: 420,
-        easing: 'ease-in-out-cubic',
-      },
+      { fit: { eles, padding: 100 } },
+      { duration: 420, easing: 'ease-in-out-cubic' },
     );
 
     node.select();
