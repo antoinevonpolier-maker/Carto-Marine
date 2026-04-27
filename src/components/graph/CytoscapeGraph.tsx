@@ -1,5 +1,5 @@
 import cytoscape, { type Core, type ElementDefinition, type NodeSingular } from 'cytoscape';
-import { Download, Maximize2, RefreshCw } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import type { GraphData, GraphNode } from '../../types/data';
@@ -136,7 +136,6 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const selectedNode = useAppStore((state) => state.selectedNode);
   const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
   const nodeScale = useAppStore((state) => state.nodeScale);
-  const setNodeScale = useAppStore((state) => state.setNodeScale);
 
   const graphNodesById = useMemo(
     () => new Map(graph.nodes.map((node) => [node.id, node])),
@@ -301,21 +300,6 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     node.select();
   }
 
-  function adjustSizes() {
-    const cy = cyRef.current;
-    if (!cy) return;
-    cy.fit(undefined, 60);
-    const zoom = cy.zoom();
-    // Use a larger base factor to better fill available space
-    const optimal = Math.min(Math.max(1.4 / zoom, 0.5), 2.5);
-    const rounded = Math.round(optimal * 4) / 4;
-    setNodeScale(rounded);
-    // Apply style immediately so the layout engine sees the new node bounding boxes
-    cy.style(buildStyle(rounded) as any);
-    // Re-run layout so nodes are repositioned with proper spacing for their new sizes
-    runLayout(true);
-  }
-
   function exportPng() {
     const cy = cyRef.current;
     if (!cy) return;
@@ -356,11 +340,6 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
             Relancer
           </Button>
         )}
-
-        <Button onClick={adjustSizes} variant="secondary">
-          <Maximize2 className="h-4 w-4" />
-          Ajuster
-        </Button>
 
         <Button onClick={exportPng} variant="secondary">
           <Download className="h-4 w-4" />
