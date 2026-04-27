@@ -175,7 +175,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
     cy.elements().remove();
     cy.add(elements);
-    runLayout();
+    runLayout(true);
 
     cy.off('tap');
     cy.off('mouseover');
@@ -229,7 +229,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     cy.style(buildStyle(nodeScale) as any);
   }, [nodeScale]);
 
-  function runLayout() {
+  function runLayout(fitAfter = false) {
     const cy = cyRef.current;
     if (!cy) return;
 
@@ -265,7 +265,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
             };
 
     const layout = cy.layout(layoutOptions as cytoscape.LayoutOptions);
-    layout.one('layoutstop', () => cy.fit(undefined, 60));
+    if (fitAfter) layout.one('layoutstop', () => cy.fit(undefined, 60));
     layout.run();
   }
 
@@ -277,8 +277,8 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     if (!node || node.empty()) return;
 
     cy.animate(
-      { center: { eles: node }, zoom: Math.max(cy.zoom(), 1.2) },
-      { duration: 380, easing: 'ease-in-out-cubic' },
+      { fit: { eles: node, padding: 160 } },
+      { duration: 420, easing: 'ease-in-out-cubic' },
     );
 
     node.select();
@@ -322,7 +322,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
           <option value="cose">Réseau force</option>
         </select>
 
-        <Button onClick={runLayout} variant="secondary">
+        <Button onClick={() => runLayout(false)} variant="secondary">
           <RefreshCw className="h-4 w-4" />
           Relancer
         </Button>
