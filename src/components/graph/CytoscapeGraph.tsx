@@ -130,7 +130,6 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const cyRef = useRef<Core | null>(null);
   const nodeToFocusRef = useRef<string | null>(null);
   const forceLayoutInitializedRef = useRef(false);
-  const lastNodeCountRef = useRef(0);
   const [layoutName, setLayoutName] = useState<'breadthfirst' | 'cose' | 'concentric'>('cose');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
@@ -179,15 +178,10 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
 
     cy.elements().remove();
     cy.add(elements);
-    const currentNodeCount = cy.nodes().length;
     if (layoutName === 'cose') {
       if (!forceLayoutInitializedRef.current) {
         runLayout(true);
         forceLayoutInitializedRef.current = true;
-      } else if (currentNodeCount !== lastNodeCountRef.current) {
-        // In force mode, re-run layout only when graph structure changes (expand/collapse),
-        // not on simple node selection.
-        runLayout(false);
       } else {
         const id = nodeToFocusRef.current;
         if (id) {
