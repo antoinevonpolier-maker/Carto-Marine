@@ -135,6 +135,7 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const selectedNode = useAppStore((state) => state.selectedNode);
   const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
   const nodeScale = useAppStore((state) => state.nodeScale);
+  const setNodeScale = useAppStore((state) => state.setNodeScale);
 
   const graphNodesById = useMemo(
     () => new Map(graph.nodes.map((node) => [node.id, node])),
@@ -295,8 +296,16 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
     node.select();
   }
 
-  function fitGraph() {
-    cyRef.current?.fit(undefined, 60);
+  function adjustSizes() {
+    const cy = cyRef.current;
+    if (!cy) return;
+    cy.fit(undefined, 60);
+    // Calcule le nodeScale optimal : on veut que le texte soit lisible quel que soit le zoom.
+    // Si zoom = 0.4 (beaucoup de noeuds), on grossit les noeuds (scale = 1/zoom).
+    // Si zoom = 1.5 (peu de noeuds), on les rétrécit.
+    const zoom = cy.zoom();
+    const optimal = Math.min(Math.max(1 / zoom, 0.3), 2.5);
+    setNodeScale(Math.round(optimal * 4) / 4); // arrondi au 0.25 près
   }
 
   function exportPng() {
@@ -334,18 +343,16 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
         </select>
 
         {layoutName === 'cose' && (
-          <>
-            <Button onClick={() => runLayout(false)} variant="secondary">
-              <RefreshCw className="h-4 w-4" />
-              Relancer
-            </Button>
-
-            <Button onClick={fitGraph} variant="secondary">
-              <Maximize2 className="h-4 w-4" />
-              Ajuster
-            </Button>
-          </>
+          <Button onClick={() => runLayout(false)} variant="secondary">
+            <RefreshCw className="h-4 w-4" />
+            Relancer
+          </Button>
         )}
+
+        <Button onClick={adjustSizes} variant="secondary">
+          <Maximize2 className="h-4 w-4" />
+          Ajuster
+        </Button>
 
         <Button onClick={exportPng} variant="secondary">
           <Download className="h-4 w-4" />

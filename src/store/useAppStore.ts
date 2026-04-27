@@ -30,6 +30,7 @@ interface AppState {
   setGraphMaxDepth: (depth: number) => void;
   toggleDarkMode: () => void;
   nodeScale: number;
+  setNodeScale: (scale: number) => void;
   increaseNodeScale: () => void;
   decreaseNodeScale: () => void;
 }
@@ -77,6 +78,7 @@ export const useAppStore = create<AppState>((set) => ({
   setGraphMaxDepth: (graphMaxDepth) => set({ graphMaxDepth }),
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
   nodeScale: 1,
+  setNodeScale: (nodeScale) => set({ nodeScale }),
   increaseNodeScale: () => set((state) => ({ nodeScale: Math.min(state.nodeScale + 0.25, 3) })),
   decreaseNodeScale: () => set((state) => ({ nodeScale: Math.max(state.nodeScale - 0.25, 0.25) })),
 }));
