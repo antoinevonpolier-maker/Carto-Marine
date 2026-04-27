@@ -51,7 +51,8 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   const setSelectedNode = useAppStore((state) => state.setSelectedNode);
   const selectedNode = useAppStore((state) => state.selectedNode);
   const setExpandedNodeIds = useAppStore((state) => state.setExpandedNodeIds);
-  const graphFitCounter = useAppStore((state) => state.graphFitCounter);
+  const zoomInCounter = useAppStore((state) => state.zoomInCounter);
+  const zoomOutCounter = useAppStore((state) => state.zoomOutCounter);
 
   const graphNodesById = useMemo(
     () => new Map(graph.nodes.map((node) => [node.id, node])),
@@ -232,9 +233,18 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
   }, [graph.nodes.length, selectedNode]);
 
   useEffect(() => {
-    if (graphFitCounter === 0) return;
-    cyRef.current?.fit(undefined, 60);
-  }, [graphFitCounter]);
+    if (zoomInCounter === 0) return;
+    const cy = cyRef.current;
+    if (!cy) return;
+    cy.zoom({ level: cy.zoom() * 1.3, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
+  }, [zoomInCounter]);
+
+  useEffect(() => {
+    if (zoomOutCounter === 0) return;
+    const cy = cyRef.current;
+    if (!cy) return;
+    cy.zoom({ level: cy.zoom() * 0.77, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
+  }, [zoomOutCounter]);
 
   function runLayout() {
     const cy = cyRef.current;
