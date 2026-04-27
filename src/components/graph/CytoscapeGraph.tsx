@@ -190,8 +190,11 @@ export function CytoscapeGraph({ graph }: CytoscapeGraphProps) {
       setSelectedNode(node);
 
       if (node.hasChildren) {
-        // Accordion: expand this node exclusively, close all sibling branches
+        // Always keep default nodes (depth <= 2) open, then expand clicked branch
         const newIds = new Set<string>();
+        for (const [id, n] of graphNodesById) {
+          if (n.depth <= 2) newIds.add(id);
+        }
         newIds.add(node.id);
         let parentId = node.parentId;
         while (parentId) {
